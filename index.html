@@ -99,6 +99,7 @@ function clearData() {
 	}
 	for (var i = 0; i < traits_count; i++) {
 		document.getElementById("trait_" + i).value = "";
+		document.getElementById("def_" + i).value = "";
 	}
 	
 	for (var i = 0; i < traits_count; i++) {
@@ -108,6 +109,8 @@ function clearData() {
 			}
 		}
 	}
+	
+	updateUrl();
 }
 
 function getData() {

@@ -188,6 +188,10 @@ function changeAlternative() {
 	refreshCalc();
 }
 
+function changeWeight() {
+	refreshCalc();
+}
+
 function changeTrait() {
 	refreshCalc();
 }
@@ -265,22 +269,22 @@ function onLoad() {
 <tr>
 <td><input class="trait" oninput="changeTrait();" id="trait_0" type="text" /></td>
 <td><input class="definition" id="def_0" type="text" /></td>
-<td><input class="weight" id="w_0" type="text" /></td>
+<td><input oninput="changeWeight();" class="weight" id="w_0" type="text" /></td>
 </tr>
 <tr>
 <td><input class="trait" oninput="changeTrait();" id="trait_1" type="text" /></td>
 <td><input class="definition" id="def_1" type="text" /></td>
-<td><input class="weight" id="w_1" type="text" /></td>
+<td><input oninput="changeWeight();" class="weight" id="w_1" type="text" /></td>
 </tr>
 <tr>
 <td><input class="trait" oninput="changeTrait();" id="trait_2" type="text" /></td>
 <td><input class="definition" id="def_2" type="text" /></td>
-<td><input class="weight" id="w_2" type="text" /></td>
+<td><input oninput="changeWeight();" class="weight" id="w_2" type="text" /></td>
 </tr>
 <tr>
 <td><input class="trait" oninput="changeTrait();" id="trait_3" type="text" /></td>
 <td><input class="definition" id="def_3" type="text" /></td>
-<td><input class="weight" id="w_3" type="text" /></td>
+<td><input oninput="changeWeight();" class="weight" id="w_3" type="text" /></td>
 </tr>
 </table>
 <hr />

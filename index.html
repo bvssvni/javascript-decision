@@ -207,6 +207,21 @@ function onLoad() {
 
 </script>
 <style>
+body {
+	background-color: #cccccc;
+}
+
+table {
+	border-collapse:collapse;
+	background-color: #dddddd;
+}
+
+td {
+	border: 1px solid;
+	padding: 5px;
+	font-family: Georgia;
+}
+
 .alternative {
 
 }
@@ -221,10 +236,18 @@ function onLoad() {
 
 .weight {
 	width: 64px;
+	text-align: right;
 }
 
 .cmp {
 	width: 64px;
+	text-align: right;
+}
+
+.sum {
+	background-color: #000000;
+	color: #ffffff;
+	text-align: center;
 }
 
 .toolbar {
@@ -238,6 +261,7 @@ function onLoad() {
 <input type="button" onclick="updateUrl();" value="Update Url" />
 <input type="button" onclick="clearData();" value="Clear" />
 </div>
+<hr />
 <table>
 <tr>
 <td>Alternatives:</td>
@@ -260,6 +284,7 @@ function onLoad() {
 <td><div class="sum" id="sum_3"></div></td>
 </tr>
 </table>
+<hr />
 <table>
 <tr>
 <td>Traits:</td>

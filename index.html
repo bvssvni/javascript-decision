@@ -75,13 +75,13 @@ function refreshCalc() {
 	for (var k = 0; k < traits_count; k++) {
 		var altSum = 0;
 		var weightText = document.getElementById("w_" + k).value;
-		var weight = parseFloat(weightText);
+		var weight = parseFloat(weightText == "" ? 0 : weightText);
 	
 		for (var i = 0; i < alternatives_count; i++) {
 			var sum = 0;
 			for (var j = 0; j < alternatives_count; j++) {
 				var text = document.getElementById("cmp_" + k + "_" + j + "_" + i).value;
-				sum += parseInt(text);
+				sum += parseInt(text == "" ? 0 : text);
 			}
 			document.getElementById("sum_" + k + "_" + i).textContent = sum;
 			

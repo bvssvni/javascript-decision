@@ -1,0 +1,484 @@
+<html>
+<head>
+<script language="javascript">
+
+var alternatives_count = 4;
+var traits_count = 4;
+
+// LZW-compress a string
+function lzw_encode(s) {
+    var dict = {};
+    var data = (s + "").split("");
+    var out = [];
+    var currChar;
+    var phrase = data[0];
+    var code = 256;
+    for (var i=1; i<data.length; i++) {
+        currChar=data[i];
+        if (dict[phrase + currChar] != null) {
+            phrase += currChar;
+        }
+        else {
+            out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+            dict[phrase + currChar] = code;
+            code++;
+            phrase=currChar;
+        }
+    }
+    out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+    for (var i=0; i<out.length; i++) {
+        out[i] = String.fromCharCode(out[i]);
+    }
+    return out.join("");
+}
+
+// Decompress an LZW-encoded string
+function lzw_decode(s) {
+    var dict = {};
+    var data = (s + "").split("");
+    var currChar = data[0];
+    var oldPhrase = currChar;
+    var out = [currChar];
+    var code = 256;
+    var phrase;
+    for (var i=1; i<data.length; i++) {
+        var currCode = data[i].charCodeAt(0);
+        if (currCode < 256) {
+            phrase = data[i];
+        }
+        else {
+phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+        }
+        out.push(phrase);
+        currChar = phrase.charAt(0);
+        dict[code] = oldPhrase + currChar;
+        code++;
+        oldPhrase = phrase;
+    }
+    return out.join("");
+}
+
+function refreshCalc() {
+  for (var i = 0; i < traits_count; i++) {
+		var text = document.getElementById("trait_" + i).value;
+		document.getElementById("k_" + i).textContent = text;
+	}
+	
+	for (var j = 0; j < traits_count; j++) {
+		for (var i = 0; i < alternatives_count; i++) {
+			var text = document.getElementById("alternative_" + i).value;
+			document.getElementById("t_" + j + "_" + i).textContent = text;
+			document.getElementById("tr_" + j + "_" + i).textContent = text;
+		}
+	}
+	
+	for (var k = 0; k < traits_count; k++) {
+		var altSum = 0;
+		var weightText = document.getElementById("w_" + k).value;
+		var weight = parseFloat(weightText);
+	
+		for (var i = 0; i < alternatives_count; i++) {
+			var sum = 0;
+			for (var j = 0; j < alternatives_count; j++) {
+				var text = document.getElementById("cmp_" + k + "_" + j + "_" + i).value;
+				sum += parseInt(text);
+			}
+			document.getElementById("sum_" + k + "_" + i).textContent = sum;
+			
+			altSum += weight * sum;
+		}
+		
+		document.getElementById("sum_" + k).textContent = altSum;
+	}
+}
+
+function clearData() {
+	for (var i = 0; i < alternatives_count; i++) {
+		document.getElementById("alternative_" + i).value = "";
+	}
+	for (var i = 0; i < traits_count; i++) {
+		document.getElementById("trait_" + i).value = "";
+	}
+	
+	for (var i = 0; i < traits_count; i++) {
+		for (var j = 0; j < alternatives_count; j++) {
+			for (var k = 0; k < alternatives_count; k++) {
+				document.getElementById("cmp_" + i + "_" + j + "_" + k).value = "";
+			}
+		}
+	}
+}
+
+function getData() {
+	var str = "";
+	var s = String.fromCharCode(31);
+	str += s + alternatives_count;
+	str += s + traits_count;
+	
+	for (var i = 0; i < alternatives_count; i++) {
+		var text = document.getElementById("alternative_" + i).value;
+		str += s + text;
+	}
+	for (var i = 0; i < traits_count; i++) {
+		var text = document.getElementById("trait_" + i).value;
+		str += s + text;
+		
+		text = document.getElementById("def_" + i).value;
+		str += s + text;
+		
+		text = document.getElementById("w_" + i).value;
+		str += s + text;
+	}
+	
+	for (var i = 0; i < traits_count; i++) {
+		for (var j = 0; j < alternatives_count; j++) {
+			for (var k = 0; k < alternatives_count; k++) {
+				var text = document.getElementById("cmp_" + i + "_" + j + "_" + k).value;
+				str += s + text;				
+			}
+		}
+	}
+	
+	return str;
+}
+
+function setData(str) {
+	var s = String.fromCharCode(31);
+	var vals = str.split(s);
+	var f = 1;
+	var altCount = parseInt(vals[f++]);
+	var traitCount = parseInt(vals[f++]);
+	
+	for (var i = 0; i < altCount; i++) {
+		document.getElementById("alternative_" + i).value = vals[f++];
+	}
+	for (var i = 0; i < traitCount; i++) {
+		document.getElementById("trait_" + i).value = vals[f++];
+		document.getElementById("def_" + i).value = vals[f++];
+		document.getElementById("w_" + i).value = vals[f++];
+	}
+	
+	for (var i = 0; i < traits_count; i++) {
+		for (var j = 0; j < alternatives_count; j++) {
+			for (var k = 0; k < alternatives_count; k++) {
+				document.getElementById("cmp_" + i + "_" + j + "_" + k).value = vals[f++];
+			}
+		}
+	}
+}
+
+
+function readData() {
+	var str = window.location.search;
+	if (str.length == 0 || str.indexOf("?data=") != 0) {
+		return;
+	}
+	
+	str = str.substring(str.indexOf("?data=") + "?data=".length);
+	str = lzw_decode(decodeURIComponent(str));
+	setData(str);
+}
+
+function updateUrl() {
+	var str = lzw_encode(getData());
+	window.location.href = "?data=" + encodeURIComponent(str);
+}
+
+function changeAlternative() {
+	refreshCalc();
+}
+
+function changeTrait() {
+	refreshCalc();
+}
+
+function changeComparison() {
+	refreshCalc();
+}
+
+function onLoad() {
+	readData();
+	refreshCalc();
+}
+
+</script>
+<style>
+.alternative {
+
+}
+
+.trait {
+
+}
+
+.definition {
+
+}
+
+.weight {
+	width: 64px;
+}
+
+.cmp {
+	width: 64px;
+}
+
+.toolbar {
+
+}
+
+</style>
+</head>
+<body onload="onLoad('sheet');">
+<div class="toolbar">
+<input type="button" onclick="updateUrl();" value="Update Url" />
+<input type="button" onclick="clearData();" value="Clear" />
+</div>
+<table>
+<tr>
+<td>Alternatives:</td>
+<td>Sum:</td>
+</tr>
+<tr>
+<td><input class="alternative" oninput="changeAlternative();" id="alternative_0" type="text" /></td>
+<td><div class="sum" id="sum_0"></div></td>
+</tr>
+<tr>
+<td><input class="alternative" oninput="changeAlternative();" id="alternative_1" type="text" /></td>
+<td><div class="sum" id="sum_1"></div></td>
+</tr>
+<tr>
+<td><input class="alternative" oninput="changeAlternative();" id="alternative_2" type="text" /></td>
+<td><div class="sum" id="sum_2"></div></td>
+</tr>
+<tr>
+<td><input class="alternative" oninput="changeAlternative();" id="alternative_3" type="text" /></td>
+<td><div class="sum" id="sum_3"></div></td>
+</tr>
+</table>
+<table>
+<tr>
+<td>Traits:</td>
+<td>Definition:</td>
+<td>Weight:</td>
+</tr>
+<tr>
+<td><input class="trait" oninput="changeTrait();" id="trait_0" type="text" /></td>
+<td><input class="definition" id="def_0" type="text" /></td>
+<td><input class="weight" id="w_0" type="text" /></td>
+</tr>
+<tr>
+<td><input class="trait" oninput="changeTrait();" id="trait_1" type="text" /></td>
+<td><input class="definition" id="def_1" type="text" /></td>
+<td><input class="weight" id="w_1" type="text" /></td>
+</tr>
+<tr>
+<td><input class="trait" oninput="changeTrait();" id="trait_2" type="text" /></td>
+<td><input class="definition" id="def_2" type="text" /></td>
+<td><input class="weight" id="w_2" type="text" /></td>
+</tr>
+<tr>
+<td><input class="trait" oninput="changeTrait();" id="trait_3" type="text" /></td>
+<td><input class="definition" id="def_3" type="text" /></td>
+<td><input class="weight" id="w_3" type="text" /></td>
+</tr>
+</table>
+<hr />
+<table>
+
+<tr>
+<td><div id="k_0"></div></td>
+<td><div id="t_0_0"></div></td>
+<td><div id="t_0_1"></div></td>
+<td><div id="t_0_2"></div></td>
+<td><div id="t_0_3"></div></td>
+<td>Sum:</td>
+</tr>
+
+<tr>
+<td><div id="tr_0_0"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_0_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_1_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_2_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_3_0" type="text" /></td>
+<td><div class="sum" id="sum_0_0"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_0_1"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_0_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_1_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_2_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_3_1" type="text" /></td>
+<td><div class="sum" id="sum_0_1"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_0_2"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_0_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_1_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_2_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_3_2" type="text" /></td>
+<td><div class="sum" id="sum_0_2"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_0_3"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_0_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_1_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_2_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_0_3_3" type="text" /></td>
+<td><div class="sum" id="sum_0_3"></div></td>
+</tr>
+
+</table>
+<hr />
+<table>
+
+<tr>
+<td><div id="k_1"></div></td>
+<td><div id="t_1_0"></div></td>
+<td><div id="t_1_1"></div></td>
+<td><div id="t_1_2"></div></td>
+<td><div id="t_1_3"></div></td>
+<td>Sum:</td>
+</tr>
+
+<tr>
+<td><div id="tr_1_0"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_0_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_1_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_2_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_3_0" type="text" /></td>
+<td><div class="sum" id="sum_1_0"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_1_1"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_0_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_1_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_2_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_3_1" type="text" /></td>
+<td><div class="sum" id="sum_1_1"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_1_2"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_0_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_1_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_2_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_3_2" type="text" /></td>
+<td><div class="sum" id="sum_1_2"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_1_3"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_0_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_1_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_2_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_1_3_3" type="text" /></td>
+<td><div class="sum" id="sum_1_3"></div></td>
+</tr>
+
+</table>
+<hr />
+<table>
+
+<tr>
+<td><div id="k_2"></div></td>
+<td><div id="t_2_0"></div></td>
+<td><div id="t_2_1"></div></td>
+<td><div id="t_2_2"></div></td>
+<td><div id="t_2_3"></div></td>
+<td>Sum:</td>
+</tr>
+
+<tr>
+<td><div id="tr_2_0"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_0_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_1_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_2_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_3_0" type="text" /></td>
+<td><div class="sum" id="sum_2_0"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_2_1"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_0_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_1_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_2_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_3_1" type="text" /></td>
+<td><div class="sum" id="sum_2_1"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_2_2"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_0_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_1_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_2_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_3_2" type="text" /></td>
+<td><div class="sum" id="sum_2_2"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_2_3"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_0_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_1_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_2_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_2_3_3" type="text" /></td>
+<td><div class="sum" id="sum_2_3"></div></td>
+</tr>
+
+</table>
+<hr />
+<table>
+
+<tr>
+<td><div id="k_3"></div></td>
+<td><div id="t_3_0"></div></td>
+<td><div id="t_3_1"></div></td>
+<td><div id="t_3_2"></div></td>
+<td><div id="t_3_3"></div></td>
+<td>Sum:</td>
+</tr>
+
+<tr>
+<td><div id="tr_3_0"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_0_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_1_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_2_0" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_3_0" type="text" /></td>
+<td><div class="sum" id="sum_3_0"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_3_1"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_0_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_1_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_2_1" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_3_1" type="text" /></td>
+<td><div class="sum" id="sum_3_1"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_3_2"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_0_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_1_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_2_2" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_3_2" type="text" /></td>
+<td><div class="sum" id="sum_3_2"></div></td>
+</tr>
+
+<tr>
+<td><div id="tr_3_3"></div></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_0_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_1_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_2_3" type="text" /></td>
+<td><input oninput="changeComparison();" class="cmp" id="cmp_3_3_3" type="text" /></td>
+<td><div class="sum" id="sum_3_3"></div></td>
+</tr>
+
+</table>
+
+</body>
+</html>

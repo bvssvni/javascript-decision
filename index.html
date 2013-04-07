@@ -75,7 +75,7 @@ function refreshCalc() {
 	for (var k = 0; k < traits_count; k++) {
 		var altSum = 0;
 		var weightText = document.getElementById("w_" + k).value;
-		var weight = parseFloat(weightText == "" ? 0 : weightText);
+		var weight = parseFloat(weightText == "" ? 1 : weightText);
 	
 		for (var i = 0; i < alternatives_count; i++) {
 			var sum = 0;

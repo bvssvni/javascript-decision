@@ -1,5 +1,7 @@
+<!DOCTYPE html>
 <html>
 <head>
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
 <script language="javascript">
 
 var alternatives_count = 4;
@@ -72,23 +74,22 @@ function refreshCalc() {
 		}
 	}
 	
-	for (var k = 0; k < traits_count; k++) {
+	for (var i = 0; i < alternatives_count; i++) {
 		var altSum = 0;
-		var weightText = document.getElementById("w_" + k).value;
-		var weight = parseFloat(weightText == "" ? 1 : weightText);
-	
-		for (var i = 0; i < alternatives_count; i++) {
+		for (var k = 0; k < traits_count; k++) {
+			var weightText = document.getElementById("w_" + k).value;
+			var weight = parseFloat(weightText == "" ? 1 : weightText);
 			var sum = 0;
 			for (var j = 0; j < alternatives_count; j++) {
 				var text = document.getElementById("cmp_" + k + "_" + j + "_" + i).value;
 				sum += parseInt(text == "" ? 0 : text);
 			}
-			document.getElementById("sum_" + k + "_" + i).textContent = sum;
 			
+			document.getElementById("sum_" + k + "_" + i).textContent = sum;
 			altSum += weight * sum;
 		}
 		
-		document.getElementById("sum_" + k).textContent = altSum;
+		document.getElementById("sum_" + i).textContent = altSum;
 	}
 }
 
